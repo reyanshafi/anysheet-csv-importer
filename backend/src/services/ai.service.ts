@@ -1,6 +1,12 @@
 import { GoogleGenAI, Type, type Schema } from "@google/genai";
 import { config } from "../config.js";
-import { CRM_FIELDS, CRM_STATUSES, DATA_SOURCES, type IndexedRow } from "../domain/crm.js";
+import {
+  CRM_FIELDS,
+  CRM_STATUSES,
+  DATA_SOURCES,
+  type ColumnMapping,
+  type IndexedRow,
+} from "../domain/crm.js";
 import type { AiRecord } from "../domain/validation.js";
 
 /**
@@ -88,6 +94,54 @@ const RECORD_SCHEMA: Schema = {
   required: ["records"],
 };
 
+const PLAN_SCHEMA: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    mappings: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          source_column: { type: Type.STRING },
+          crm_field: { type: Type.STRING },
+          note: { type: Type.STRING, nullable: true },
+        },
+        required: ["source_column", "crm_field"],
+        propertyOrdering: ["source_column", "crm_field", "note"],
+      },
+    },
+  },
+  required: ["mappings"],
+};
+
+const PLAN_INSTRUCTION = `You are analyzing the columns of a CSV that will be migrated into the GrowEasy CRM.
+Given the header names and a few sample rows, return a column mapping plan: for EVERY source column, which CRM field it feeds.
+
+Rules:
+- crm_field MUST be one of ${JSON.stringify([...CRM_FIELDS])} or "ignored".
+- Every source column must appear at least once. A column may appear twice if it feeds two fields (e.g. a phone column with country codes feeds both country_code and mobile_without_country_code).
+- Use "ignored" for columns with no CRM value (internal IDs, GCLIDs, ad ids). Columns with useful free text should map to crm_note or description instead.
+- Add a short "note" only when the mapping needs explanation (e.g. "split into country code + number", "status text will be normalized").
+- Judge by both the header name AND the sample values — a column named "misc" containing emails feeds email.`;
+
+/**
+ * Rate-limit (429) errors carry a suggested wait ("Please retry in 11.7s").
+ * Honoring it beats blind backoff: the quota window has a fixed reset, so
+ * retrying earlier is guaranteed to fail again.
+ * Returns undefined for non-rate-limit errors.
+ */
+export function rateLimitDelayMs(error: unknown): number | undefined {
+  const message = error instanceof Error ? error.message : String(error);
+  if (!/quota|rate.?limit|RESOURCE_EXHAUSTED|"code"\s*:\s*429|error 429/i.test(message)) {
+    return undefined;
+  }
+  const hinted = /(?:retry|try again) in (?:(\d+)m)?(\d+(?:\.\d+)?)s/i.exec(message);
+  const seconds = hinted
+    ? Number.parseInt(hinted[1] ?? "0", 10) * 60 + Number.parseFloat(hinted[2])
+    : 15;
+  return Math.min(seconds * 1000 + 1000, 60_000); // +1s buffer, capped at 60s
+}
+
 /** Cap individual cell size so one pathological cell can't blow the context. */
 const MAX_CELL_CHARS = 400;
 
@@ -110,13 +164,42 @@ export class AiExtractionService {
     this.client = new GoogleGenAI({ apiKey });
   }
 
-  /** Map one batch of rows. Throws on API/parse failure — caller handles retry. */
-  async mapBatch(rows: IndexedRow[]): Promise<AiRecord[]> {
-    const payload = rows.map(compactRow);
+  /**
+   * Analyze headers + sample rows and return the column mapping plan.
+   * Throws on API/parse failure — caller handles retry/fallback.
+   */
+  async analyzeColumns(headers: string[], sampleRows: IndexedRow[]): Promise<ColumnMapping[]> {
+    const samples = sampleRows.slice(0, 5).map(compactRow);
 
     const response = await this.client.models.generateContent({
       model: config.geminiModel,
-      contents: `Map these ${payload.length} CSV rows to GrowEasy CRM records:\n${JSON.stringify(payload)}`,
+      contents: `Headers: ${JSON.stringify(headers)}\nSample rows: ${JSON.stringify(samples)}\nReturn the column mapping plan.`,
+      config: {
+        systemInstruction: PLAN_INSTRUCTION,
+        responseMimeType: "application/json",
+        responseSchema: PLAN_SCHEMA,
+        temperature: 0,
+        thinkingConfig: { thinkingBudget: 0 },
+      },
+    });
+
+    const text = response.text;
+    if (!text) throw new Error("Empty plan response from Gemini");
+    const parsed = JSON.parse(text) as { mappings?: unknown };
+    if (!Array.isArray(parsed.mappings)) throw new Error("Plan response missing mappings array");
+    return parsed.mappings as ColumnMapping[];
+  }
+
+  /** Map one batch of rows. Throws on API/parse failure — caller handles retry. */
+  async mapBatch(rows: IndexedRow[], planText?: string): Promise<AiRecord[]> {
+    const payload = rows.map(compactRow);
+    const planSection = planText
+      ? `COLUMN MAPPING PLAN — interpret columns consistently with this plan (row-level rules still apply):\n${planText}\n\n`
+      : "";
+
+    const response = await this.client.models.generateContent({
+      model: config.geminiModel,
+      contents: `${planSection}Map these ${payload.length} CSV rows to GrowEasy CRM records:\n${JSON.stringify(payload)}`,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
