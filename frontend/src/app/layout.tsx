@@ -39,8 +39,17 @@ export default function RootLayout({
         <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
           <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
             <Link href="/" className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-base text-white shadow-sm">
-                🌱
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  className="h-[18px] w-[18px]"
+                  aria-hidden
+                >
+                  <path d="M7 17 17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </span>
               <div className="leading-tight">
                 <p className="text-sm font-semibold tracking-tight">GrowEasy</p>
