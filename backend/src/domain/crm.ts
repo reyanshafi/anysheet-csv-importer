@@ -61,17 +61,42 @@ export interface ImportSummary {
   failedBatches: number;
   durationMs: number;
   model: string;
+  /** "passthrough" = file was already in CRM format; validated without AI. */
+  mode: "ai" | "passthrough";
+}
+
+/**
+ * True when every header is already a GrowEasy CRM field name — the file is a
+ * CRM export, so AI mapping would be an identity operation. Extra/unknown
+ * columns disqualify: they may hold information the AI should merge into notes.
+ */
+export function isCrmFormatHeaders(headers: readonly string[]): boolean {
+  if (headers.length < 2) return false;
+  const fields = new Set<string>(CRM_FIELDS);
+  return headers.every((header) => fields.has(header.trim().toLowerCase()));
+}
+
+/** One entry of the column mapping plan: which CRM field a source column feeds. */
+export interface ColumnMapping {
+  source_column: string;
+  /** A CRM field name, or "ignored" for columns with no CRM value. */
+  crm_field: CrmField | "ignored";
+  /** Short AI explanation, e.g. "split into country code + number". */
+  note?: string;
 }
 
 export interface ImportResult {
   summary: ImportSummary;
   records: MappedRecord[];
   skipped: SkippedRecord[];
+  /** Column mapping plan; empty when analysis was unavailable. */
+  mappings: ColumnMapping[];
 }
 
 /** NDJSON events streamed by POST /api/import. */
 export type ImportEvent =
   | { type: "start"; totalRows: number; totalBatches: number; batchSize: number }
+  | { type: "plan"; mappings: ColumnMapping[] }
   | {
       type: "batch";
       batchIndex: number;
