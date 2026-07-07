@@ -5,7 +5,7 @@ export default function LandingPage() {
   return (
     <div className="relative">
       {/* decorative background: grid + emerald glow */}
-      <div aria-hidden className="hero-grid absolute inset-x-0 -top-8 -z-10 h-[34rem]" />
+      <div aria-hidden className="hero-grid absolute inset-x-0 -top-8 bottom-0 -z-10" />
       <div
         aria-hidden
         className="absolute left-1/2 top-0 -z-10 h-64 w-[36rem] max-w-full -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl dark:bg-emerald-500/15"
@@ -13,7 +13,7 @@ export default function LandingPage() {
 
       <section className="mx-auto flex max-w-3xl flex-col items-center px-2 py-10 text-center sm:py-16">
       <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-        {/* <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> */}
+            {/* <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> */}
         AI-powered - Gemini
       </span>
 
@@ -34,7 +34,7 @@ export default function LandingPage() {
           className="group inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
         >
           Import your CSV
-          <ArrowUpRightIcon />
+          <ImportIcon />
         </Link>
         <a
           href="https://github.com/reyanshafi/groweasy-csv-importer"
@@ -114,16 +114,20 @@ function FeatureCard({
   );
 }
 
-function ArrowUpRightIcon() {
+function ImportIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
-      className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+      className="h-4 w-4 transition-transform group-hover:translate-y-0.5"
     >
-      <path d="M7 17 17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M12 4v10m0 0 4-4m-4 4-4-4M4 20h16"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
