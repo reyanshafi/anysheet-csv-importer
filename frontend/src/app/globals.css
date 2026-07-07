@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/* Class-based dark mode: the ThemeToggle stamps `.dark` on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Landing hero: faint square grid that fades out toward the bottom edges */
+.hero-grid {
+  background-image:
+    linear-gradient(to right, rgb(161 161 170 / 0.22) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(161 161 170 / 0.22) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(ellipse 90% 75% at 50% 0%, black 35%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 75% at 50% 0%, black 35%, transparent 100%);
+}
+.dark .hero-grid {
+  background-image:
+    linear-gradient(to right, rgb(113 113 122 / 0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(113 113 122 / 0.18) 1px, transparent 1px);
+}
+
+/* Slim scrollbars for the data tables */
+.table-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(161 161 170 / 0.5) transparent;
+}
+.table-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.table-scroll::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: rgb(161 161 170 / 0.5);
+}
+.table-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Shimmer for the indeterminate phase of the progress bar */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+.animate-shimmer {
+  animation: shimmer 1.4s ease-in-out infinite;
+}
