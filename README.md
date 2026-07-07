@@ -1,6 +1,6 @@
-# GrowEasy - AI CSV Importer
+# CRMWise - AI CSV Importer
 
-Import CRM leads from **any** CSV — Facebook lead exports, Google Ads, other CRMs, hand-made spreadsheets — regardless of column names, order, or formatting. Gemini maps whatever columns exist into the GrowEasy CRM schema, with server-side validation guaranteeing the output always follows the CRM rules.
+Import CRM leads from **any** CSV — Facebook lead exports, Google Ads, other CRMs, hand-made spreadsheets — regardless of column names, order, or formatting. Gemini maps whatever columns exist into the target CRM schema, with server-side validation guaranteeing the output always follows the CRM rules. Built for the GrowEasy internship assignment; configured here to target GrowEasy's specific CRM schema.
 
 **Flow:** Upload (drag & drop) → Preview (virtualized table, no AI yet) → Confirm → live batch-by-batch AI progress → Results (imported + skipped records, downloadable CRM CSV).
 

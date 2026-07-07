@@ -13,7 +13,7 @@ export default function LandingPage() {
 
       <section className="mx-auto flex max-w-3xl flex-col items-center px-2 py-10 text-center sm:py-16">
       <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        {/* <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> */}
         AI-powered - Gemini
       </span>
 
@@ -24,7 +24,7 @@ export default function LandingPage() {
 
       <p className="mt-5 max-w-xl text-base text-zinc-500 sm:text-lg dark:text-zinc-400">
         Facebook lead exports, ad reports, hand-made spreadsheets - whatever the column names,
-        the AI maps them into GrowEasy CRM records. Statuses normalized, dates fixed, nothing
+        the AI maps them into structured CRM records. Statuses normalized, dates fixed, nothing
         invented.
       </p>
 
@@ -62,7 +62,7 @@ export default function LandingPage() {
         </span>
         <div className="w-full max-w-xs rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 text-left font-mono text-xs leading-6 text-emerald-800 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300">
           <p className="mb-1 font-sans text-[11px] font-semibold uppercase tracking-wide text-emerald-500">
-            groweasy crm
+            structured crm
           </p>
           <p className="truncate">name: Rahul S</p>
           <p className="truncate">mobile: +91 · 9822011223</p>
