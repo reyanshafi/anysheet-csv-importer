@@ -24,7 +24,7 @@ function describeAiFailure(error: unknown): string {
   return message.length > 160 ? `${message.slice(0, 160)}…` : message;
 }
 import { withRetry } from "../utils/retry.js";
-import { AiExtractionService } from "./ai.service.js";
+import { AiExtractionService, rateLimitDelayMs } from "./ai.service.js";
 
 /**
  * Orchestrates a full import. Files already in CRM format bypass the AI and
@@ -125,7 +125,10 @@ async function runAiImport(
   let mappings: ColumnMapping[] = [];
   let planText = "";
   try {
-    const rawPlan = await withRetry(() => ai.analyzeColumns(headers, indexed), { attempts: 2 });
+    const rawPlan = await withRetry(() => ai.analyzeColumns(headers, indexed), {
+      attempts: 2,
+      delayForError: rateLimitDelayMs,
+    });
     mappings = normalizeMappings(rawPlan, headers);
     planText = mappings
       .filter((m) => m.crm_field !== "ignored")
@@ -152,6 +155,7 @@ async function runAiImport(
     try {
       aiRecords = await withRetry(() => ai.mapBatch(batch, planText || undefined), {
         attempts: config.aiMaxRetries,
+        delayForError: rateLimitDelayMs,
         onRetry: (attempt, error) =>
           console.warn(
             `[import] batch ${batchIndex + 1}/${batches.length} attempt ${attempt} failed:`,
